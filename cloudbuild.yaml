@@ -1,5 +1,8 @@
 steps:
 - name: 'docker'
-  args: ['build','-t','gcr.io/$PROJECT_ID/gcpdevops','.']
+  args: ['build', '-t', 'gcr.io/$PROJECT_ID/gcpdevops', '.']
 images:
 - 'gcr.io/$PROJECT_ID/gcpdevops'
+options:
+  logging: CLOUD_LOGGING_ONLY # Alternative: NONE, depending on your requirements
+  machineType: 'N1_HIGHCPU_8' # Optional: Specify machine type for more resources if needed
