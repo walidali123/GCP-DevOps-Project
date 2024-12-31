@@ -1,16 +1,44 @@
-# The GCP DevOps Course
-GCP DevOps refers to the practice of implementing DevOps principles and practices using Google Cloud Platform (GCP) services and tools. DevOps is a set of practices that combines software development (Dev) and IT operations (Ops), aiming to shorten the systems development life cycle and provide continuous delivery with high software quality. GCP offers a range of cloud services that support the automation, collaboration, integration, and speed that DevOps emphasizes. These services facilitate various DevOps processes including but not limited to:
+# GCP DevOps Project
 
-1. **Source Code Management**: Google Cloud Source Repositories provide fully-featured, scalable, private Git repositories hosted on Google Cloud.
+This project demonstrates a DevOps pipeline using Google Cloud Platform (GCP) to build, push, and deploy a containerized application to Google Kubernetes Engine (GKE).
 
-2. **Continuous Integration/Continuous Deployment (CI/CD)**: Cloud Build offers capabilities for building, testing, and deploying software quickly across all languages and Google Cloud environments. It integrates seamlessly with other GCP services to automate the deployment of applications to services such as Google Kubernetes Engine (GKE), App Engine, Cloud Functions, and Firebase.
+## Overview
 
-3. **Containerization and Orchestration**: Google Kubernetes Engine (GKE) is a managed environment for deploying, managing, and scaling containerized applications using Google infrastructure. The orchestration and management of containers are crucial in DevOps practices for ensuring application portability and efficient scaling.
+The pipeline automates the following steps:
+1. **Build a Docker image** for the application.
+2. **Push the image** to Google Container Registry (GCR).
+3. **Deploy the image** to a GKE cluster.
 
-4. **Infrastructure as Code (IaC)**: Deployment Manager and Terraform support for Google Cloud allow teams to automate the provisioning of Google Cloud resources in a repeatable and predictable manner, following the IaC principle.
+The deployment includes creating a Kubernetes Deployment and exposing it via a LoadBalancer Service.
 
-5. **Monitoring and Logging**: Google Cloud’s operations suite (formerly Stackdriver) provides integrated monitoring, logging, and diagnostics. These tools help DevOps teams gain insight into how software performs in production, understand its health, and respond to issues in real-time.
+## Prerequisites
 
-6. **Security and Compliance**: GCP provides various tools and features to ensure security is integrated into the DevOps cycle, not added at the end. Security Command Center, Cloud Security Scanner, and Binary Authorization are some of the tools that help in achieving this.
+Before running the pipeline, ensure the following:
+- A GCP project with GKE, GCR, and Cloud Build APIs enabled.
+- A GKE cluster named `gcp-devops-project` in the `us-central1-c` zone.
+- Proper IAM permissions to manage Cloud Build and GKE.
+- Docker installed locally for testing (optional).
 
-7. **Collaboration and Productivity**: Beyond technical tools, GCP integrates with various collaboration tools to enhance team productivity and communication, a core principle in DevOps culture.
+## Files
+
+### 1. `cloudbuild.yaml`
+
+Defines the Cloud Build pipeline for the project:
+
+```yaml
+steps:
+  # Build the container image
+- name: "gcr.io/cloud-builders/docker"
+  args: ["build", "-t", "gcr.io/$PROJECT_ID/gcpdevops", "."]
+  # Push container image
+- name: "gcr.io/cloud-builders/docker"
+  args: ["push", "gcr.io/$PROJECT_ID/gcpdevops"]
+  # Deploy container image to GKE
+- name: "gcr.io/cloud-builders/gke-deploy"
+  args:
+  - run
+  - --filename=gke.yaml
+  - --image=gcr.io/$PROJECT_ID/gcpdevops
+  - --location=us-central1-c
+  - --cluster=gcp-devops-project
+  - --namespace=gcp-devops-prod
